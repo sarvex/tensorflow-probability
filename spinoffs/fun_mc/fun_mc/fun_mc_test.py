@@ -120,10 +120,8 @@ def _gen_cov(data, axis):
       source_1=''.join(source_1),
       source_2=''.join(source_2),
       dest=''.join(dest))
-  cov = (
-      np.einsum(formula, centered_data, centered_data) /
-      np.prod(np.array(shape)[np.array(axis)]))
-  return cov
+  return np.einsum(formula, centered_data, centered_data) / np.prod(
+      np.array(shape)[np.array(axis)])
 
 
 class GenCovTest(real_tf.test.TestCase):
@@ -302,8 +300,7 @@ class FunMCTest(tfp_test_util.TestCase, parameterized.TestCase):
   )
   def testRecoverStateFromArgsMissing(self, args, kwargs, missing):
     state_structure = collections.OrderedDict([('c', 1), ('b', 2), ('a', 3)])
-    with self.assertRaisesRegex(ValueError,
-                                'Missing \'{}\' from kwargs.'.format(missing)):
+    with self.assertRaisesRegex(ValueError, f"Missing \'{missing}\' from kwargs."):
       fun_mc.recover_state_from_args(args, kwargs, state_structure)
 
   @parameterized.named_parameters(
@@ -1342,8 +1339,8 @@ class FunMCTest(tfp_test_util.TestCase, parameterized.TestCase):
       rms, _ = fun_mc.running_mean_step(rms, data[idx], axis=aggregation)
       return (rms, idx + 1), ()
 
-    true_aggregation = (0,) + (() if aggregation is None else tuple(
-        [a + 1 for a in util.flatten_tree(aggregation)]))
+    true_aggregation = (0, ) + (() if aggregation is None else tuple(
+        a + 1 for a in util.flatten_tree(aggregation)))
     true_mean = np.mean(data, true_aggregation)
 
     (rms, _), _ = fun_mc.trace(
@@ -1391,8 +1388,8 @@ class FunMCTest(tfp_test_util.TestCase, parameterized.TestCase):
     rng = np.random.RandomState(_test_seed())
     data = self._constant(rng.randn(*shape))
 
-    true_aggregation = (0,) + (() if aggregation is None else tuple(
-        [a + 1 for a in util.flatten_tree(aggregation)]))
+    true_aggregation = (0, ) + (() if aggregation is None else tuple(
+        a + 1 for a in util.flatten_tree(aggregation)))
     true_mean = np.mean(data, true_aggregation)
     true_var = np.var(data, true_aggregation)
 
@@ -1447,8 +1444,8 @@ class FunMCTest(tfp_test_util.TestCase, parameterized.TestCase):
     rng = np.random.RandomState(_test_seed())
     data = self._constant(rng.randn(*shape))
 
-    true_aggregation = (0,) + (() if aggregation is None else tuple(
-        [a + 1 for a in util.flatten_tree(aggregation)]))
+    true_aggregation = (0, ) + (() if aggregation is None else tuple(
+        a + 1 for a in util.flatten_tree(aggregation)))
     true_mean = np.mean(data, true_aggregation)
     true_cov = _gen_cov(data, true_aggregation)
 
@@ -1548,10 +1545,7 @@ class FunMCTest(tfp_test_util.TestCase, parameterized.TestCase):
 
     def target_log_prob_fn(x):
       lp = -0.5 * tf.square(x)
-      if event_ndims is None:
-        return lp, ()
-      else:
-        return tf.reduce_sum(lp, -1), ()
+      return (lp, ()) if event_ndims is None else (tf.reduce_sum(lp, -1), ())
 
     def kernel(hmc_state, raac_state, seed):
       hmc_seed, seed = util.split_seed(seed, 2)
@@ -1583,8 +1577,8 @@ class FunMCTest(tfp_test_util.TestCase, parameterized.TestCase):
         num_steps=num_steps,
         trace_fn=lambda state, extra: state[0].state))(state, seed)
 
-    true_aggregation = (0,) + (() if aggregation is None else tuple(
-        [a + 1 for a in util.flatten_tree(aggregation)]))
+    true_aggregation = (0, ) + (() if aggregation is None else tuple(
+        a + 1 for a in util.flatten_tree(aggregation)))
     true_variance = np.array(
         tf.math.reduce_variance(np.array(chain), true_aggregation))
     true_autocov = np.array(

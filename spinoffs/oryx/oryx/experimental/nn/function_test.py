@@ -83,10 +83,7 @@ class IsTraining(nn.Layer):
     return in_spec
 
   def _call(self, x, training=True):
-    if training:
-      return jnp.ones_like(x)
-    else:
-      return jnp.zeros_like(x)
+    return jnp.ones_like(x) if training else jnp.zeros_like(x)
 
 
 class Sampler(nn.Layer):

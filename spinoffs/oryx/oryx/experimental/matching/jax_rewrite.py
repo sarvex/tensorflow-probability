@@ -318,9 +318,7 @@ class Literal(JaxExpression):
     return object.__hash__(self)
 
   def __eq__(self, other):
-    if not isinstance(other, Literal):
-      return False
-    return self.value == other.value
+    return False if not isinstance(other, Literal) else self.value == other.value
 
 
 class JaxVar(JaxExpression):
@@ -715,9 +713,7 @@ def jaxpr_to_expressions(jaxpr: jax_core.Jaxpr) -> Tuple[Expr]:
   env = {}
 
   def read_env(var: jax_core.Var) -> Any:
-    if isinstance(var, jax_core.Literal):
-      return Literal(var.val)
-    return env[str(var)]
+    return Literal(var.val) if isinstance(var, jax_core.Literal) else env[str(var)]
 
   def write_env(var: jax_core.Var, val: Any) -> None:
     if isinstance(var, jax_core.Literal):

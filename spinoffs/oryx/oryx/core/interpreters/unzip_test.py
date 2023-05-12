@@ -63,8 +63,7 @@ def single(x):
 
 
 def single_variable(x):
-  y = variable(x, name='x')
-  return y
+  return variable(x, name='x')
 
 
 def single_variable_plus_one(x):

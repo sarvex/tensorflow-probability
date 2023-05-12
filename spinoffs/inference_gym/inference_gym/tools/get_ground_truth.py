@@ -148,7 +148,7 @@ def main(argv):
                 sestd=None,
             ))
 
-  argv_str = ' \\\n'.join(['  {}'.format(arg) for arg in sys.argv[1:]])
+  argv_str = ' \\\n'.join([f'  {arg}' for arg in sys.argv[1:]])
   command_str = (
       'python -m inference_gym.tools.get_ground_truth \\\n{argv_str}'.format(
           argv_str=argv_str))
@@ -162,8 +162,8 @@ def main(argv):
         file_basedir, '../targets/ground_truth')
   else:
     output_directory = FLAGS.output_directory
-  file_path = os.path.join(output_directory, '{}.py'.format(FLAGS.target))
-  print('Writing ground truth values to: {}'.format(file_path))
+  file_path = os.path.join(output_directory, f'{FLAGS.target}.py')
+  print(f'Writing ground truth values to: {file_path}')
   with open(file_path, 'w') as f:
     f.write(file_str)
 

@@ -42,9 +42,7 @@ def silence_nonrewritten_import_errors():
     Nothing.
   """
   if BACKEND is None:
-    try:
+    with contextlib.suppress(ImportError):
       yield
-    except ImportError:
-      pass
   else:
     yield

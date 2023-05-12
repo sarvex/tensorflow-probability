@@ -55,9 +55,7 @@ def brownian_motion_prior_fn(num_timesteps,
                               scale=innovation_noise_scale,
                               name='x_0'))
   for t in range(1, num_timesteps):
-    new = yield tfd.Normal(loc=new,
-                           scale=innovation_noise_scale,
-                           name='x_{}'.format(t))
+    new = yield tfd.Normal(loc=new, scale=innovation_noise_scale, name=f'x_{t}')
 
 
 def brownian_motion_unknown_scales_prior_fn(num_timesteps, use_markov_chain):

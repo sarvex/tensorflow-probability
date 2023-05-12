@@ -92,10 +92,7 @@ class ProbitRegression(bayesian_model.BayesianModel):
 
         probits = tf.einsum('nd,...d->...n', features, weights)
         log_likelihood = tfd.ProbitBernoulli(probits=probits).log_prob(labels)
-        if reduce_sum:
-          return tf.reduce_sum(log_likelihood, [-1])
-        else:
-          return log_likelihood
+        return tf.reduce_sum(log_likelihood, [-1]) if reduce_sum else log_likelihood
 
       self._train_log_likelihood_fn = functools.partial(
           log_likelihood_fn, features=train_features, labels=train_labels)

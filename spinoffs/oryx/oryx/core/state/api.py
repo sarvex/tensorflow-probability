@@ -124,8 +124,7 @@ class ArraySpec:
     return (self.shape == other.shape) and (self.dtype == other.dtype)
 
   def __repr__(self):
-    return 'ArraySpec({}, dtype={})'.format(
-        self.shape, self.dtype)
+    return f'ArraySpec({self.shape}, dtype={self.dtype})'
 
 
 @functools.singledispatch

@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Install tensorflow_probability."""
+
 import os
 import sys
 
@@ -40,12 +41,10 @@ else:
 
 if release:
   project_name = 'tensorflow-probability'
+  TFDS_PACKAGE = 'tensorflow-datasets >= 2.2.0'
 else:
   project_name = 'tfp-nightly'
 
-if release:
-  TFDS_PACKAGE = 'tensorflow-datasets >= 2.2.0'
-else:
   TFDS_PACKAGE = 'tfds-nightly'
 
 

@@ -112,6 +112,7 @@ def make_wrapper_type(cls):
 
   if clsid not in _registry:
 
+
     class _WrapperType(cls):
       """Oryx bijector wrapper type."""
 
@@ -150,7 +151,7 @@ def make_wrapper_type(cls):
       def __repr__(self):
         return '{}()'.format(self.__class__.__name__)
 
-    _WrapperType.__name__ = cls.__name__ + 'Wrapper'
+    _WrapperType.__name__ = f'{cls.__name__}Wrapper'
     _registry[clsid] = _WrapperType
   return _registry[clsid]
 

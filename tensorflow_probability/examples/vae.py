@@ -436,7 +436,7 @@ def download(directory, filename):
   if not tf.io.gfile.exists(directory):
     tf.io.gfile.makedirs(directory)
   url = os.path.join(ROOT_PATH, filename)
-  print("Downloading %s to %s" % (url, filepath))
+  print(f"Downloading {url} to {filepath}")
   urllib.request.urlretrieve(url, filepath)
   return filepath
 
@@ -496,8 +496,7 @@ def main(argv):
   params = FLAGS.flag_values_dict()
   params["activation"] = getattr(tf.nn, params["activation"])
   if FLAGS.delete_existing and tf.io.gfile.exists(FLAGS.model_dir):
-    tf.compat.v1.logging.warn("Deleting old log directory at {}".format(
-        FLAGS.model_dir))
+    tf.compat.v1.logging.warn(f"Deleting old log directory at {FLAGS.model_dir}")
     tf.io.gfile.rmtree(FLAGS.model_dir)
   tf.io.gfile.makedirs(FLAGS.model_dir)
 

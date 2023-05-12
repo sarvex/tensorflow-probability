@@ -1144,13 +1144,13 @@ class ConditionalBijectorTest(test_util.TestCase):
     retval = tf.constant(1.)
     for name in ['forward', 'inverse']:
       method = getattr(b, name)
-      with mock.patch.object(b, '_' + name, return_value=retval) as mock_method:
+      with mock.patch.object(b, f'_{name}', return_value=retval) as mock_method:
         method(1., arg1=arg1, arg2=arg2)
       mock_method.assert_called_once_with(mock.ANY, arg1=arg1, arg2=arg2)
 
     for name in ['inverse_log_det_jacobian', 'forward_log_det_jacobian']:
       method = getattr(b, name)
-      with mock.patch.object(b, '_' + name, return_value=retval) as mock_method:
+      with mock.patch.object(b, f'_{name}', return_value=retval) as mock_method:
         method(1., event_ndims=0, arg1=arg1, arg2=arg2)
       mock_method.assert_called_once_with(mock.ANY, arg1=arg1, arg2=arg2)
 
@@ -1161,13 +1161,13 @@ class ConditionalBijectorTest(test_util.TestCase):
     retval = tf.constant(1.)
     for name in ['forward', 'inverse']:
       method = getattr(b, name)
-      with mock.patch.object(b, '_' + name, return_value=retval) as mock_method:
+      with mock.patch.object(b, f'_{name}', return_value=retval) as mock_method:
         method(1., arg1=arg1, arg2=arg2)
       mock_method.assert_called_once_with(mock.ANY, arg1=arg1, arg2=arg2)
 
     for name in ['inverse_log_det_jacobian', 'forward_log_det_jacobian']:
       method = getattr(b, name)
-      with mock.patch.object(b, '_' + name, return_value=retval) as mock_method:
+      with mock.patch.object(b, f'_{name}', return_value=retval) as mock_method:
         method(1., event_ndims=0, arg1=arg1, arg2=arg2)
       mock_method.assert_called_once_with(mock.ANY, arg1=arg1, arg2=arg2)
 

@@ -44,10 +44,7 @@ def _impl(path_in_tf=(), private=True, name=None):
         setattr(cur_mod, path_element, new_mod)
       cur_mod = getattr(cur_mod, path_element)
     if name is None:
-      if private:
-        final_name = fn.__name__[1:]
-      else:
-        final_name = fn.__name__
+      final_name = fn.__name__[1:] if private else fn.__name__
     else:
       final_name = name
     setattr(cur_mod, final_name, fn)

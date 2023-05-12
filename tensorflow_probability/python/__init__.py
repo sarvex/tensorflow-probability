@@ -36,7 +36,7 @@ def _validate_tf_environment(package):
   """
   try:
     import tensorflow.compat.v1 as tf
-  except (ImportError, ModuleNotFoundError):
+  except ImportError:
     # Print more informative error message, then reraise.
     print('\n\nFailed to import TensorFlow. Please note that TensorFlow is not '
           'installed by default when you install TensorFlow Probability. This '
@@ -127,10 +127,11 @@ def _tf_loaded():
 # lazy-loaded modules by forcing a load.
 for pkg_name in _lazy_load + _maybe_nonlazy_load:
   globals()[pkg_name] = lazy_loader.LazyLoader(
-      pkg_name, globals(), 'tensorflow_probability.python.{}'.format(pkg_name),
-      # These checks need to happen before lazy-loading, since the modules
-      # themselves will try to import tensorflow, too.
-      on_first_access=functools.partial(_validate_tf_environment, pkg_name))
+      pkg_name,
+      globals(),
+      f'tensorflow_probability.python.{pkg_name}',
+      on_first_access=functools.partial(_validate_tf_environment, pkg_name),
+  )
 
 if _tf_loaded():
   # Non-lazy load of packages that register with tensorflow or keras.

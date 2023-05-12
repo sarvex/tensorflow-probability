@@ -80,10 +80,7 @@ class Reshape(base.Layer):
 
   @classmethod
   def spec(cls, in_spec, dim_out):
-    if isinstance(dim_out, int):
-      dim_out = (dim_out,)
-    else:
-      dim_out = tuple(dim_out)
+    dim_out = (dim_out, ) if isinstance(dim_out, int) else tuple(dim_out)
     return state.Shape(dim_out, dtype=in_spec.dtype)
 
   def _call(self, x):

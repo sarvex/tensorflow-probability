@@ -77,7 +77,7 @@ class NonIdentifiableQuarticMeasurementModel(bayesian_model.BayesianModel):
       ValueError: If ndims < 2.
     """
     if ndims < 2:
-      raise ValueError('ndims must be at least 2, saw: {}'.format(ndims))
+      raise ValueError(f'ndims must be at least 2, saw: {ndims}')
 
     with tf.name_scope(name):
 

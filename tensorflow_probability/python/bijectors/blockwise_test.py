@@ -262,13 +262,14 @@ class BlockwiseBijectorTest(test_util.TestCase):
     zeros = tf.zeros(1)
 
     bijectors = [
-        tfb.Inline(  # pylint: disable=g-complex-comprehension
+        tfb.Inline(
             forward_fn=mock.Mock(return_value=zeros),
             inverse_fn=mock.Mock(return_value=zeros),
             forward_log_det_jacobian_fn=mock.Mock(return_value=zeros),
             inverse_log_det_jacobian_fn=mock.Mock(return_value=zeros),
             forward_min_event_ndims=0,
-            name='inner{}'.format(i)) for i in range(2)
+            name=f'inner{i}',
+        ) for i in range(2)
     ]
 
     blockwise = tfb.Blockwise(bijectors)

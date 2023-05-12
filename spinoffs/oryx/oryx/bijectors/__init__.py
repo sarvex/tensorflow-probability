@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Module for probability bijectors and related functions."""
+
 import inspect
 
 from oryx.bijectors import bijector_extensions
@@ -24,9 +25,9 @@ __all__ = tfb.__all__
 
 for name in __all__:
   bij = getattr(tfb, name)
-  if inspect.isclass(bij) and issubclass(bij, tfb.Bijector):
-    if bij is not tfb.Bijector:
-      bij = bijector_extensions.make_type(bij)
+  if (inspect.isclass(bij) and issubclass(bij, tfb.Bijector)
+      and bij is not tfb.Bijector):
+    bij = bijector_extensions.make_type(bij)
   locals()[name] = bij
 
 del tfb

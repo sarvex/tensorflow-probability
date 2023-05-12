@@ -272,12 +272,11 @@ class Layer(state.Module, metaclass=abc.ABCMeta):
 
   def __repr__(self):
     """String representation of the Layer."""
-    return '{}(params={}, info={})'.format(
-        self.__class__.__name__, self.params, self.info)
+    return f'{self.__class__.__name__}(params={self.params}, info={self.info})'
 
   def __str__(self):
     """String representation of the Layer."""
-    return '{}()'.format(self.__class__.__name__)
+    return f'{self.__class__.__name__}()'
 
   def flatten(self):
     """Converts the Layer to a tuple suitable for PyTree."""
@@ -373,10 +372,7 @@ def _get_layer_from_args(*args, **kwargs):
   in_tree = kwargs.pop('in_tree')
   num_weights = kwargs.pop('num_weights')
   flattened_layer, args = args[:num_weights], args[num_weights:]
-  # Special handling of the `rng` kwarg
-  # to make sure it is traced
-  has_rng = kwargs.pop('has_rng', False)
-  if has_rng:
+  if has_rng := kwargs.pop('has_rng', False):
     kwargs['rng'], args = args[0], args[1:]
   layer = tree_util.tree_unflatten(in_tree, flattened_layer)
   return layer, args, kwargs

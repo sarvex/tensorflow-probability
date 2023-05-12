@@ -37,8 +37,7 @@ def layer_cau_kwargs_rule(*flat_args, num_consts, in_tree, kwargs, **_):
   flat_args = flat_args[num_consts:]
   layer, *args = tree_util.tree_unflatten(in_tree, flat_args)
   kwargs = dict(kwargs)
-  has_rng = kwargs.pop('has_rng', False)
-  if has_rng:
+  if has_rng := kwargs.pop('has_rng', False):
     rng, args = args[0], args[1:]
     kwargs = dict(kwargs, rng=rng)
   ans = layer.call_and_update(*args, **kwargs)

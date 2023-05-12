@@ -315,9 +315,7 @@ def plate(f: Optional[Program] = None, name: Optional[str] = None):
   def transform(f: Program) -> Program:
     return plate_util.make_plate(f, name=name)
 
-  if f is not None:
-    return transform(f)
-  return transform
+  return transform(f) if f is not None else transform
 
 
 # Alias for random_variable

@@ -336,13 +336,12 @@ def recover_state_from_args(args: 'Sequence[Any]', kwargs: 'Mapping[Text, Any]',
       if args:
         state[k] = args[0]
         args = args[1:]
-      else:
-        if k not in kwargs:
-          raise ValueError(
-              ('Missing \'{}\' from kwargs.\nargs=\n{}\nkwargs=\n{}\n'
-               'state_structure=\n{}').format(k, orig_args, kwargs,
-                                              _tree_repr(state_structure)))
+      elif k in kwargs:
         state[k] = kwargs[k]
+      else:
+        raise ValueError(
+            f"Missing \'{k}\' from kwargs.\nargs=\n{orig_args}\nkwargs=\n{kwargs}\nstate_structure=\n{_tree_repr(state_structure)}"
+        )
     return state
   elif (isinstance(state_structure, collections.Sequence) and
         not _is_namedtuple_like(state_structure)):
@@ -350,9 +349,9 @@ def recover_state_from_args(args: 'Sequence[Any]', kwargs: 'Mapping[Text, Any]',
     # disallow them.
     # TODO(siege): We could support length-1 sequences in principle.
     if kwargs:
-      raise ValueError('This wrapper does not accept keyword arguments for a '
-                       'sequence-like state structure=\n{}'.format(
-                           _tree_repr(state_structure)))
+      raise ValueError(
+          f'This wrapper does not accept keyword arguments for a sequence-like state structure=\n{_tree_repr(state_structure)}'
+      )
     return type(state_structure)(args)
   elif args:
     return args[0]
@@ -387,17 +386,17 @@ def call_potential_fn(
     TypeError: If `fn` doesn't fulfill the contract.
   """
   ret = call_fn(fn, args)
-  error_template = ('`{fn:}` must have a signature '
-                    '`fn(args) -> (tf.Tensor, extra)`'
-                    ' but when called with `args=`\n{args:}\nreturned '
-                    '`ret=`\n{ret:}\ninstead. The structure of '
-                    '`args=`\n{args_s:}\nThe structure of `ret=`\n{ret_s:}\n'
-                    'A common solution is to adjust the `return`s in `fn` to '
-                    'be `return args, ()`.')
-
   if not isinstance(ret, collections.abc.Sequence) or len(ret) != 2:
     args_s = _tree_repr(args)
     ret_s = _tree_repr(ret)
+    error_template = ('`{fn:}` must have a signature '
+                      '`fn(args) -> (tf.Tensor, extra)`'
+                      ' but when called with `args=`\n{args:}\nreturned '
+                      '`ret=`\n{ret:}\ninstead. The structure of '
+                      '`args=`\n{args_s:}\nThe structure of `ret=`\n{ret_s:}\n'
+                      'A common solution is to adjust the `return`s in `fn` to '
+                      'be `return args, ()`.')
+
     raise TypeError(
         error_template.format(
             fn=fn, args=args, ret=ret, args_s=args_s, ret_s=ret_s))
@@ -489,17 +488,17 @@ def call_transport_map(
   """
 
   ret = call_fn(fn, args)
-  error_template = ('`{fn:}` must have a signature '
-                    '`fn(args) -> (out, extra)`'
-                    ' but when called with `args=`\n{args:}\nreturned '
-                    '`ret=`\n{ret:}\ninstead. The structure of '
-                    '`args=`\n{args_s:}\nThe structure of `ret=`\n{ret_s:}\n'
-                    'A common solution is to adjust the `return`s in `fn` to '
-                    'be `return args, ()`.')
-
   if not isinstance(ret, collections.Sequence) or len(ret) != 2:
     args_s = _tree_repr(args)
     ret_s = _tree_repr(ret)
+    error_template = ('`{fn:}` must have a signature '
+                      '`fn(args) -> (out, extra)`'
+                      ' but when called with `args=`\n{args:}\nreturned '
+                      '`ret=`\n{ret:}\ninstead. The structure of '
+                      '`args=`\n{args_s:}\nThe structure of `ret=`\n{ret_s:}\n'
+                      'A common solution is to adjust the `return`s in `fn` to '
+                      'be `return args, ()`.')
+
     raise TypeError(
         error_template.format(
             fn=fn, args=args, ret=ret, args_s=args_s, ret_s=ret_s))
@@ -924,7 +923,7 @@ def blanes_3_stage_step(
   a1 = 0.11888010966
   b1 = 0.29619504261
   coefficients = [a1, b1, 0.5 - a1, 1. - 2. * b1]
-  coefficients = coefficients + list(reversed(coefficients))[1:]
+  coefficients += list(reversed(coefficients))[1:]
   return splitting_integrator_step(
       integrator_step_state,
       step_size,
@@ -965,7 +964,7 @@ def blanes_4_stage_step(
   a2 = 0.268548791
   b1 = 0.191667800
   coefficients = [a1, b1, a2, 0.5 - b1, 1. - 2. * (a1 + a2)]
-  coefficients = coefficients + list(reversed(coefficients))[1:]
+  coefficients += list(reversed(coefficients))[1:]
   return splitting_integrator_step(
       integrator_step_state,
       step_size,
@@ -2410,10 +2409,7 @@ def running_mean_step(
   def _one_part(vec, mean, num_points):
     """Updates a single part."""
     vec = tf.convert_to_tensor(vec, mean.dtype)
-    if axis is None:
-      vec_mean = vec
-    else:
-      vec_mean = tf.reduce_mean(vec, axis)
+    vec_mean = vec if axis is None else tf.reduce_mean(vec, axis)
     mean_diff = vec_mean - mean
 
     additional_points = tf.size(vec) // tf.size(mean)

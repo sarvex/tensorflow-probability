@@ -154,15 +154,10 @@ class Chain(_Chain, bijector_lib.AutoCompositeTensorBijector):
   def __new__(cls, *args, **kwargs):
     """Returns a `_Chain` if any of `bijectors` is not a `CompositeTensor."""
     if cls is Chain:
-      if args:
-        bijectors = args[0]
-      else:
-        bijectors = kwargs.get('bijectors')
-
-      if bijectors is not None:
-        if not all(isinstance(b, tf.__internal__.CompositeTensor)
-                   for b in bijectors):
-          return _Chain(*args, **kwargs)
+      bijectors = args[0] if args else kwargs.get('bijectors')
+      if bijectors is not None and not all(
+          isinstance(b, tf.__internal__.CompositeTensor) for b in bijectors):
+        return _Chain(*args, **kwargs)
     return super(Chain, cls).__new__(cls)
 
 

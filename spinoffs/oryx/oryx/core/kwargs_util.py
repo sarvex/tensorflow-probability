@@ -62,11 +62,7 @@ def filter_kwargs(func, kwargs):
   if defaults is None:
     return {}
   valid_kwargs = set(argspec.args[-len(defaults):])
-  filtered_kwargs = {}
-  for kw in kwargs:
-    if kw in valid_kwargs:
-      filtered_kwargs[kw] = kwargs[kw]
-  return filtered_kwargs
+  return {kw: kwargs[kw] for kw in kwargs if kw in valid_kwargs}
 
 
 def check_in_kwargs(func, key):

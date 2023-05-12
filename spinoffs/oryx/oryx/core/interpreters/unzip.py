@@ -73,23 +73,22 @@ class UnzipCustomRules:
     self.rules = rules
 
   def __getitem__(self, key):
-    if key not in self.rules:
+    if key in self.rules:
+      return self.rules[key]
+    def custom_rule(*tracers, **params):
+      out_jaxpr_tracers = pe.custom_partial_eval_rules[key](*tracers,
+                                                            **params)
+      out_tracers = [UnzipTracer(
+          out_tracer._trace, out_tracer.pval, out_tracer.recipe,  # pylint: disable=protected-access
+          False, None) for out_tracer in out_jaxpr_tracers]
+      for out_tracer in out_tracers:
+        recipe = out_tracer.recipe
+        out_tracer.recipe = pe.new_eqn_recipe(recipe.invars, out_tracers,
+                                              recipe.primitive, recipe.params,
+                                              recipe.source_info)  # pytype: disable=wrong-arg-types
+      return out_tracers
 
-      def custom_rule(*tracers, **params):
-        out_jaxpr_tracers = pe.custom_partial_eval_rules[key](*tracers,
-                                                              **params)
-        out_tracers = [UnzipTracer(
-            out_tracer._trace, out_tracer.pval, out_tracer.recipe,  # pylint: disable=protected-access
-            False, None) for out_tracer in out_jaxpr_tracers]
-        for out_tracer in out_tracers:
-          recipe = out_tracer.recipe
-          out_tracer.recipe = pe.new_eqn_recipe(recipe.invars, out_tracers,
-                                                recipe.primitive, recipe.params,
-                                                recipe.source_info)  # pytype: disable=wrong-arg-types
-        return out_tracers
-
-      return custom_rule
-    return self.rules[key]
+    return custom_rule
 
   def __setitem__(self, key, val):
     self.rules[key] = val
@@ -242,9 +241,7 @@ class UnzipTrace(jax_core.Trace):
       for t in out_tracers:
         t.variable_recipe = variable_recipe
 
-    if primitive.multiple_results:
-      return out_tracers
-    return out_tracers[0]
+    return out_tracers if primitive.multiple_results else out_tracers[0]
 
   def process_call(self, call_primitive, f, tracers, params):
     return self.handle_call_primitive(call_primitive, f, tracers, params, False)
@@ -423,10 +420,7 @@ class UnzipTracer(jax_core.Tracer):
 
   @property
   def parents(self):
-    if isinstance(self.recipe, pe.JaxprEqnRecipe):
-      return self.recipe.invars
-    else:
-      return []
+    return self.recipe.invars if isinstance(self.recipe, pe.JaxprEqnRecipe) else []
 
   def is_pure(self):
     pv, _ = self.pval
@@ -439,7 +433,7 @@ class UnzipTracer(jax_core.Tracer):
     return self
 
   def __repr__(self):
-    return 'Traced[{}]<{}:{}>'.format(self.is_key(), self.aval, self._trace)
+    return f'Traced[{self.is_key()}]<{self.aval}:{self._trace}>'
 
 
 @lu.transformation_with_aux
@@ -519,7 +513,7 @@ def unzip_to_init_apply_subjaxprs(master, settings, keys, pvals):
       name = t.variable_recipe.name
       if (name in variable_recipes and
           variable_recipes[name] is not t.variable_recipe):
-        raise ValueError('Cannot use duplicate variable name: {}'.format(name))
+        raise ValueError(f'Cannot use duplicate variable name: {name}')
       variable_recipes[name] = t.variable_recipe
 
   variables = {
@@ -600,7 +594,7 @@ def unzip(f, *, tag: str, key_args=0):
         flat_args, _ = tree_util.tree_flatten(args)
         flat_params = jax_core.eval_jaxpr(init_jaxpr, init_consts, *flat_args)
         flat_variables = tree_util.tree_unflatten(variable_tree, flat_params)
-        return {name: var for name, var in safe_zip(names, flat_variables)}
+        return dict(safe_zip(names, flat_variables))
 
       def apply(params, *args):
         flat_variables, _ = tree_util.tree_flatten(
@@ -668,7 +662,7 @@ def _tracers_to_jaxpr(in_tracers, out_tracers):
         eqns.append(pe.recipe_to_eqn(getvar, recipe))
         processed_eqn_ids.add(recipe.eqn_id)
     elif isinstance(recipe, pe.LambdaBinding):
-      if not any(t is in_tracer for in_tracer in in_tracers):
+      if all(t is not in_tracer for in_tracer in in_tracers):
         raise VariableError(f'Found unknown input tracer: {t}')
       assert in_tracers, 'Lambda binding with no args'
     elif isinstance(recipe, pe.FreeVar):

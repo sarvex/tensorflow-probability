@@ -118,7 +118,7 @@ def plot_weight_posteriors(names, qm_vals, qs_vals, fname):
 
   fig.tight_layout()
   canvas.print_figure(fname, format='png')
-  print('saved {}'.format(fname))
+  print(f'saved {fname}')
 
 
 def plot_heldout_prediction(input_vals, probs,
@@ -155,7 +155,7 @@ def plot_heldout_prediction(input_vals, probs,
   fig.tight_layout()
 
   canvas.print_figure(fname, format='png')
-  print('saved {}'.format(fname))
+  print(f'saved {fname}')
 
 
 def create_model():
@@ -288,7 +288,7 @@ def main(argv):
   del argv  # unused
   if tf.io.gfile.exists(FLAGS.model_dir):
     tf.compat.v1.logging.warning(
-        'Warning: deleting old log directory at {}'.format(FLAGS.model_dir))
+        f'Warning: deleting old log directory at {FLAGS.model_dir}')
     tf.io.gfile.rmtree(FLAGS.model_dir)
   tf.io.gfile.makedirs(FLAGS.model_dir)
 
@@ -349,13 +349,13 @@ def main(argv):
                                      FLAGS.model_dir,
                                      'epoch{}_step{:05d}_weights.png'.format(
                                          epoch, step)))
-          plot_heldout_prediction(heldout_seq.images, probs.numpy(),
-                                  fname=os.path.join(
-                                      FLAGS.model_dir,
-                                      'epoch{}_step{}_pred.png'.format(
-                                          epoch, step)),
-                                  title='mean heldout logprob {:.2f}'
-                                  .format(heldout_log_prob))
+          plot_heldout_prediction(
+              heldout_seq.images,
+              probs.numpy(),
+              fname=os.path.join(FLAGS.model_dir,
+                                 f'epoch{epoch}_step{step}_pred.png'),
+              title='mean heldout logprob {:.2f}'.format(heldout_log_prob),
+          )
 
 
 if __name__ == '__main__':

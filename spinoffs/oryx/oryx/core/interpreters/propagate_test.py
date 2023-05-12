@@ -43,10 +43,7 @@ class Inverse(Cell):
     return self.val is None
 
   def join(self, other):
-    if other.bottom():
-      return self
-    else:
-      return other
+    return self if other.bottom() else other
 
   @classmethod
   def new(cls, val):
@@ -113,10 +110,7 @@ class ILDJ(Cell):
     return self.val is None
 
   def join(self, other):
-    if other.bottom():
-      return self
-    else:
-      return other
+    return self if other.bottom() else other
 
   @classmethod
   def new(cls, val):

@@ -78,12 +78,7 @@ class CategoricalToDiscrete(bijector.AutoCompositeTensorBijector):
   def _forward(self, x):
     map_values = tf.convert_to_tensor(self.map_values)
     if self.validate_args:
-      with tf.control_dependencies([
-          assert_util.assert_equal(
-              (0 <= x) & (x < tf.size(map_values)),
-              True,
-              message='indices out of bound')
-      ]):
+      with tf.control_dependencies([assert_util.assert_equal((x >= 0) & (x < tf.size(map_values)), True, message='indices out of bound')]):
         x = tf.identity(x)
     # If we want batch dims in self.map_values, we can (after broadcasting),
     # use:

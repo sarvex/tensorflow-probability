@@ -90,35 +90,31 @@ def _is_stateful_seed(seed):
 
 def make_tensor_seed(seed):
   """Converts a seed to a `Tensor` seed."""
-  if _is_stateful_seed(seed):
-    iinfo = np.iinfo(np.int32)
-    return tf.random.uniform([2],
-                             minval=iinfo.min,
-                             maxval=iinfo.max,
-                             dtype=tf.int32,
-                             name='seed')
-  else:
+  if not _is_stateful_seed(seed):
     return tf.convert_to_tensor(seed, dtype=tf.int32, name='seed')
+  iinfo = np.iinfo(np.int32)
+  return tf.random.uniform([2],
+                           minval=iinfo.min,
+                           maxval=iinfo.max,
+                           dtype=tf.int32,
+                           name='seed')
 
 
 def split_seed(seed, count):
   """Splits a seed into `count` seeds."""
   if _is_stateful_seed(seed):
-    if seed is None:
-      return count * [None]
-    return [
+    return (count * [None] if seed is None else [
         np.random.RandomState(seed + i).randint(0, 2**31)
         for i, seed in enumerate([seed] * count)
-    ]
-  else:
-    seeds = tf.random.stateless_uniform(
-        [count, 2],
-        seed=make_tensor_seed(seed),
-        minval=None,
-        maxval=None,
-        dtype=tf.int32,
-    )
-    return tf.unstack(seeds)
+    ])
+  seeds = tf.random.stateless_uniform(
+      [count, 2],
+      seed=make_tensor_seed(seed),
+      minval=None,
+      maxval=None,
+      dtype=tf.int32,
+  )
+  return tf.unstack(seeds)
 
 
 def random_uniform(shape, dtype, seed):

@@ -60,9 +60,8 @@ def _undo_batch_normalization(x,
     rescale = tf.sqrt(variance + variance_epsilon)
     if scale is not None:
       rescale = rescale / scale
-    batch_unnormalized = x * rescale + (
-        mean - offset * rescale if offset is not None else mean)
-    return batch_unnormalized
+    return x * rescale + (mean -
+                          offset * rescale if offset is not None else mean)
 
 
 class BatchNormalization(bijector.Bijector):
@@ -163,7 +162,7 @@ class BatchNormalization(bijector.Bijector):
 
   @classmethod
   def _parameter_properties(cls, dtype):
-    return dict()
+    return {}
 
   def _validate_bn_layer(self, layer):
     """Check for valid BatchNormalization layer.
@@ -178,10 +177,8 @@ class BatchNormalization(bijector.Bijector):
     if (not isinstance(layer, tf.keras.layers.BatchNormalization) and
         not isinstance(layer, tf1.layers.BatchNormalization)):
       raise ValueError(
-          'batchnorm_layer must be an instance of '
-          '`tf.keras.layers.BatchNormalization` or '
-          '`tf.compat.v1.layers.BatchNormalization`. Got {}'.format(
-              type(layer)))
+          f'batchnorm_layer must be an instance of `tf.keras.layers.BatchNormalization` or `tf.compat.v1.layers.BatchNormalization`. Got {type(layer)}'
+      )
     if layer.renorm:
       raise ValueError(
           '`BatchNormalization` Bijector does not support renormalization, '

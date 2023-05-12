@@ -103,10 +103,7 @@ def eval_jaxpr_with_kwargs(jaxpr: jax_core.Jaxpr, consts: Iterable[Any], *args,
   """Evals a jaxpr while passing kwargs into registered primitives."""
 
   def read(v):
-    if isinstance(v, jax_core.Literal):
-      return v.val
-    else:
-      return env[v]
+    return v.val if isinstance(v, jax_core.Literal) else env[v]
 
   def write(v, val):
     env[v] = val
@@ -291,9 +288,7 @@ def function_init(f, *, name=None, init_keyword='init_key'):
       return FunctionModule(variables, cau_jaxpr, in_tree, out_tree, name=name)
     else:
       mod = FunctionModule(variables, cau_jaxpr, in_tree, out_tree, name=name)
-      if variables:
-        return module.variable(mod, name=name, key=init_key)
-      return mod
+      return module.variable(mod, name=name, key=init_key) if variables else mod
 
   return wrapped
 

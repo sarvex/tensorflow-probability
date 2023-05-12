@@ -120,9 +120,9 @@ def build_input_pipeline(x_train, x_test, y_train, y_test,
     x_train -= x_train_mean
     x_test -= x_train_mean
 
-  print("x_train shape:" + str(x_train.shape))
-  print(str(x_train.shape[0]) + " train samples")
-  print(str(x_test.shape[0]) + " test samples")
+  print(f"x_train shape:{str(x_train.shape)}")
+  print(f"{str(x_train.shape[0])} train samples")
+  print(f"{str(x_test.shape[0])} test samples")
 
   # Build an iterator over training batches.
   training_dataset = tf.data.Dataset.from_tensor_slices(
@@ -162,7 +162,7 @@ def main(argv):
   del argv  # unused
   if tf.io.gfile.exists(FLAGS.model_dir):
     tf.compat.v1.logging.warning(
-        "Warning: deleting old log directory at {}".format(FLAGS.model_dir))
+        f"Warning: deleting old log directory at {FLAGS.model_dir}")
     tf.io.gfile.rmtree(FLAGS.model_dir)
   tf.io.gfile.makedirs(FLAGS.model_dir)
 
@@ -176,11 +176,7 @@ def main(argv):
    heldout_iterator) = build_input_pipeline(x_train, x_test, y_train, y_test,
                                             FLAGS.batch_size, 500)
 
-  if FLAGS.architecture == "resnet":
-    model_fn = bayesian_resnet
-  else:
-    model_fn = bayesian_vgg
-
+  model_fn = bayesian_resnet if FLAGS.architecture == "resnet" else bayesian_vgg
   model = model_fn(
       IMAGE_SHAPE,
       num_classes=10,

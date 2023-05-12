@@ -93,8 +93,7 @@ class Dense(base.Layer):
 
   def __str__(self):
     """String representation of the Layer."""
-    return '{}({})'.format(self.__class__.__name__,
-                           self.dim_out)
+    return f'{self.__class__.__name__}({self.dim_out})'
 
 
 class DropoutInfo(collections.namedtuple(
@@ -108,18 +107,17 @@ class Dropout(base.Layer):
   @classmethod
   def initialize(cls, rng, in_shape, rate):
     del in_shape
-    layer_params = base.LayerParams(info=DropoutInfo(rate))
-    return layer_params
+    return base.LayerParams(info=DropoutInfo(rate))
 
   @classmethod
   def spec(cls, in_spec, _):
     return in_spec
 
   def _call(self, x, training=True, rng=None):
-    info = self.info
     if training:
       if rng is None:
         raise ValueError('rng is required when training is True')
+      info = self.info
       # Using tie_in to avoid materializing constants
       keep = primitive.tie_in(x, random.bernoulli(rng, info.rate, x.shape))
       return np.where(keep, x / info.rate, 0)

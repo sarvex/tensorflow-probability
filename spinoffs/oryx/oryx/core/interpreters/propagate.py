@@ -177,9 +177,7 @@ class Environment:
                      '`write` method instead.')
 
   def __contains__(self, var: VarOrLiteral):
-    if isinstance(var, jax_core.Literal):
-      return True
-    return var in self.env
+    return True if isinstance(var, jax_core.Literal) else var in self.env
 
   def read_state(self, eqn: Equation) -> State:
     return self.states.get(eqn, None)
@@ -198,9 +196,7 @@ def construct_graph_representation(eqns):
       neighbors[var].add(eqn)
 
   def get_neighbors(var):
-    if isinstance(var, jax_core.Literal):
-      return set()
-    return neighbors[var]
+    return set() if isinstance(var, jax_core.Literal) else neighbors[var]
 
   return get_neighbors
 
@@ -336,9 +332,9 @@ def call_rule(prim, incells, outcells, **params):
   return tree_util.tree_unflatten(out_tree, flat_out)
 
 
-default_call_rules = {}
-default_call_rules[xla.xla_call_p] = functools.partial(call_rule,
-                                                       xla.xla_call_p)
+default_call_rules = {
+    xla.xla_call_p: functools.partial(call_rule, xla.xla_call_p)
+}
 default_call_rules[jax_core.call_p] = functools.partial(call_rule,
                                                         jax_core.call_p)
 default_call_rules[pe.remat_call_p] = functools.partial(call_rule,

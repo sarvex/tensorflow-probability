@@ -224,15 +224,14 @@ def _check_backends():
   they were rewritten correctly. We assume that after that point, the test
   system works.
   """
-  tested_backends = set()
-  for test_case in globals().values():
-    if hasattr(test_case, '_BACKEND_TESTED'):
-      tested_backends.add(test_case._BACKEND_TESTED)
-
-  expected_backends = set(
-      ['backend_numpy', 'backend_jax', 'backend_tensorflow'])
-  assert tested_backends == expected_backends, 'Missing backends: {}'.format(
-      expected_backends - tested_backends)
+  tested_backends = {
+      test_case._BACKEND_TESTED
+      for test_case in globals().values()
+      if hasattr(test_case, '_BACKEND_TESTED')
+  }
+  expected_backends = {'backend_numpy', 'backend_jax', 'backend_tensorflow'}
+  assert (tested_backends == expected_backends
+          ), f'Missing backends: {expected_backends - tested_backends}'
   logging.info('Tested Inference Gym backends: %s.',
                ', '.join(expected_backends))
 

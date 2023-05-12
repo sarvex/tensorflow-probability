@@ -142,17 +142,16 @@ def multi_backend_test(globals_dict,
 
   new_test_case_names = []
   for backend in backends:
-    new_module_name_comps = (
-        root_name_comps + ['dynamic', 'backend_{}'.format(backend)] +
-        relative_module_name_comps)
+    new_module_name_comps = (root_name_comps +
+                             ['dynamic', f'backend_{backend}'] +
+                             relative_module_name_comps)
     # Rewrite the module.
     new_module = importlib.import_module('.'.join(new_module_name_comps))
 
     # Subclass the test case so that we can rename it (absl uses the class name
     # in its UI).
     base_new_test = getattr(new_module, test_case.__name__)
-    new_test = type('{}_{}'.format(test_case.__name__, backend),
-                    (base_new_test,), {})
+    new_test = type(f'{test_case.__name__}_{backend}', (base_new_test,), {})
     new_test_case_names.append(new_test.__name__)
     globals_dict[new_test.__name__] = new_test
 

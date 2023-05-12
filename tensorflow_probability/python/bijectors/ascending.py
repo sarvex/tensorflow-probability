@@ -56,7 +56,7 @@ class Ascending(bijector.AutoCompositeTensorBijector):
 
   @classmethod
   def _parameter_properties(cls, dtype):
-    return dict()
+    return {}
 
   def _forward(self, x):
     y0 = x[..., :1]
@@ -68,8 +68,7 @@ class Ascending(bijector.AutoCompositeTensorBijector):
     with tf.control_dependencies(self._assertions(y)):
       x0 = y[..., :1]
       xk = tf.math.log(y[..., 1:] - y[..., :-1])
-      x = tf.concat([x0, xk], axis=-1)
-      return x
+      return tf.concat([x0, xk], axis=-1)
 
   def _forward_log_det_jacobian(self, x):
     # The Jacobian of the forward mapping is lower

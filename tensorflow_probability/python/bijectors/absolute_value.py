@@ -83,7 +83,7 @@ class AbsoluteValue(bijector.AutoCompositeTensorBijector):
 
   @classmethod
   def _parameter_properties(cls, dtype):
-    return dict()
+    return {}
 
   def _is_increasing(self):
     return False, True

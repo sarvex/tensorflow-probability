@@ -200,7 +200,7 @@ def create_model(num_samples, num_dimensions):
 def main(argv):
   del argv
   if tf.io.gfile.exists(FLAGS.model_dir):
-    print('Warning: deleting old log directory at {}'.format(FLAGS.model_dir))
+    print(f'Warning: deleting old log directory at {FLAGS.model_dir}')
     tf.io.gfile.rmtree(FLAGS.model_dir)
   tf.io.gfile.makedirs(FLAGS.model_dir)
 

@@ -204,7 +204,7 @@ class VectorModelTest(test_util.InferenceGymTestCase, parameterized.TestCase):
     # test.
     rand_elem = tf.constant(np.random.randn(), tf.float32)
 
-    self.assertEqual('vector_' + base_model.name, vec_model.name)
+    self.assertEqual(f'vector_{base_model.name}', vec_model.name)
     self.assertEqual(str(base_model), str(vec_model))
     self.assertEqual(tf.float32, vec_model.dtype)
     self.assertEqual([vec_event_size], list(vec_model.event_shape))

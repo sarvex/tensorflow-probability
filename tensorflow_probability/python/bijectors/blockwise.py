@@ -159,7 +159,7 @@ class _Blockwise(composition.Composition):
 
   @classmethod
   def _parameter_properties(cls, dtype):
-    return dict()
+    return {}
 
   @property
   def _b_joint(self):
@@ -245,9 +245,8 @@ def _validate_block_sizes(block_sizes, bijectors, validate_args):
     if (tensorshape_util.rank(block_sizes_shape) != 1 or
         (tensorshape_util.num_elements(block_sizes_shape) != len(bijectors))):
       raise ValueError(
-          '`block_sizes` must be `None`, or a vector of the same length as '
-          '`bijectors`. Got a `Tensor` with shape {} and `bijectors` of '
-          'length {}'.format(block_sizes_shape, len(bijectors)))
+          f'`block_sizes` must be `None`, or a vector of the same length as `bijectors`. Got a `Tensor` with shape {block_sizes_shape} and `bijectors` of length {len(bijectors)}'
+      )
     return block_sizes
 
   elif validate_args:

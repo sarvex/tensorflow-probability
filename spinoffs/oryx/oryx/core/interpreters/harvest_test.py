@@ -123,7 +123,7 @@ class ReapTest(absltest.TestCase):
       return variable(x, name='x')
 
     jaxpr = jax.make_jaxpr(reap_variables(f))(1.)
-    primitives = set(eqn.primitive for eqn in jaxpr.jaxpr.eqns)
+    primitives = {eqn.primitive for eqn in jaxpr.jaxpr.eqns}
     self.assertNotIn(harvest.sow_p, primitives)
 
   def test_reap_should_handle_closed_over_values(self):
@@ -193,7 +193,7 @@ class PlantTest(test_util.TestCase):
       return jax.jit(lambda x: variable(x, name='x') + 1.)(x)
 
     jaxpr = jax.make_jaxpr(plant_variables(f))({'x': 2.}, 1.)
-    primitives = set(eqn.primitive for eqn in jaxpr.jaxpr.eqns)
+    primitives = {eqn.primitive for eqn in jaxpr.jaxpr.eqns}
     self.assertIn(jax.xla.xla_call_p, primitives)
 
   def test_should_plant_in_pmap(self):

@@ -777,8 +777,7 @@ class DisentangledSequentialVAE(tf.keras.Model):
     static_sample, _ = self.sample_static_prior(samples, batch_size, fix_static)
     dynamic_sample, _ = self.sample_dynamic_prior(samples, batch_size, length,
                                                   fix_dynamic)
-    likelihood = self.decoder((dynamic_sample, static_sample))
-    return likelihood
+    return self.decoder((dynamic_sample, static_sample))
 
   def reconstruct(self, inputs, samples=1, sample_static=False,
                   sample_dynamic=False, swap_static=False, swap_dynamic=False,
@@ -836,8 +835,7 @@ class DisentangledSequentialVAE(tf.keras.Model):
     if swap_dynamic:
       dynamic_sample = tf.reverse(dynamic_sample, axis=[1])
 
-    likelihood = self.decoder((dynamic_sample, static_sample))
-    return likelihood
+    return self.decoder((dynamic_sample, static_sample))
 
   def sample_static_prior(self, samples, batch_size, fixed=False):
     """Sample the static latent prior.
@@ -897,11 +895,7 @@ class DisentangledSequentialVAE(tf.keras.Model):
       shape [samples, 1, length] if fixed or [samples, batch_size,
       length] otherwise.
     """
-    if fixed:
-      sample_batch_size = 1
-    else:
-      sample_batch_size = batch_size
-
+    sample_batch_size = 1 if fixed else batch_size
     sample, state = self.dynamic_prior.zero_state([samples, sample_batch_size])
     locs = []
     scale_diags = []
@@ -1039,13 +1033,15 @@ def summarize_dist_params(dist, name, name_scope="dist_params"):
   """
   with tf.compat.v1.name_scope(name_scope):
     tf.compat.v2.summary.histogram(
-        name="{}/{}".format(name, "mean"),
+        name=f"{name}/mean",
         data=dist.mean(),
-        step=tf.compat.v1.train.get_or_create_global_step())
+        step=tf.compat.v1.train.get_or_create_global_step(),
+    )
     tf.compat.v2.summary.histogram(
-        name="{}/{}".format(name, "stddev"),
+        name=f"{name}/stddev",
         data=dist.stddev(),
-        step=tf.compat.v1.train.get_or_create_global_step())
+        step=tf.compat.v1.train.get_or_create_global_step(),
+    )
 
 
 def summarize_mean_in_nats_and_bits(inputs, units, name,
@@ -1079,7 +1075,7 @@ def main(argv):
 
   tf.compat.v1.enable_eager_execution()
   tf.compat.v1.set_random_seed(FLAGS.seed)
-  timestamp = datetime.strftime(datetime.today(), "%y%m%d_%H%M%S")
+  timestamp = datetime.strftime(datetime.now(), "%y%m%d_%H%M%S")
   FLAGS.logdir = FLAGS.logdir.format(timestamp=timestamp)
   FLAGS.model_dir = FLAGS.model_dir.format(timestamp=timestamp)
   if not tf.io.gfile.exists(FLAGS.model_dir):
@@ -1198,9 +1194,10 @@ def main(argv):
         for grad, var in grads_and_vars:
           with tf.compat.v1.name_scope("grads"):
             tf.compat.v2.summary.histogram(
-                "{}/grad".format(var.name),
+                f"{var.name}/grad",
                 data=grad,
-                step=tf.compat.v1.train.get_or_create_global_step())
+                step=tf.compat.v1.train.get_or_create_global_step(),
+            )
           with tf.compat.v1.name_scope("vars"):
             tf.compat.v2.summary.histogram(
                 var.name,
@@ -1212,8 +1209,7 @@ def main(argv):
     is_final_step = global_step.numpy() == FLAGS.max_steps
     if is_log_step or is_final_step:
       checkpoint_manager.save()
-      print("ELBO ({}/{}): {}".format(global_step.numpy(), FLAGS.max_steps,
-                                      elbo.numpy()))
+      print(f"ELBO ({global_step.numpy()}/{FLAGS.max_steps}): {elbo.numpy()}")
       with tf.compat.v2.summary.record_if(True):
         val_data = sprites_data.test.take(20)
         inputs = next(iter(val_data.shuffle(20).batch(3)))[0]

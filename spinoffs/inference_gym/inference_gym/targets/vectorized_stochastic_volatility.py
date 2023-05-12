@@ -230,7 +230,7 @@ class VectorizedStochasticVolatility(bayesian_model.BayesianModel):
             )))
 
       def log_volatility_noncentered_fn(white_noise_shock_scale,
-                                        persistence_of_volatility):
+                                            persistence_of_volatility):
         """Noncentered parameterization of log_volatility random variable."""
         # The non-centered parameterization for log_volatility improves geometry
         # but is slower (catastrophically so if FFT is not used).
@@ -245,31 +245,30 @@ class VectorizedStochasticVolatility(bayesian_model.BayesianModel):
           return (
               white_noise_shock_scale[..., tf.newaxis] *
               _fft_conv_center(std_log_volatility, persistence_of_volatility))
-        else:
-          log_volatility = (
-              std_log_volatility * white_noise_shock_scale[..., tf.newaxis])
+        log_volatility = (
+            std_log_volatility * white_noise_shock_scale[..., tf.newaxis])
 
-          log_volatility_0 = (
-              log_volatility[..., 0] /
-              tf.sqrt(1 - persistence_of_volatility**2))
+        log_volatility_0 = (
+            log_volatility[..., 0] /
+            tf.sqrt(1 - persistence_of_volatility**2))
 
-          # Make the time axis be first, for scan to work.
-          log_volatility = distribution_util.move_dimension(
-              log_volatility, -1, 0)
-          # I.e.
-          # log_volatility[t] += (persistence_of_volatility *
-          #     log_volatility[t-1])
-          log_volatility = tf.concat(
-              [
-                  log_volatility_0[tf.newaxis],
-                  tf.scan(
-                      lambda v_prev, v: persistence_of_volatility * v_prev + v,
-                      log_volatility[1:], log_volatility_0)
-              ],
-              axis=0,
-          )
+        # Make the time axis be first, for scan to work.
+        log_volatility = distribution_util.move_dimension(
+            log_volatility, -1, 0)
+        # I.e.
+        # log_volatility[t] += (persistence_of_volatility *
+        #     log_volatility[t-1])
+        log_volatility = tf.concat(
+            [
+                log_volatility_0[tf.newaxis],
+                tf.scan(
+                    lambda v_prev, v: persistence_of_volatility * v_prev + v,
+                    log_volatility[1:], log_volatility_0)
+            ],
+            axis=0,
+        )
 
-          return distribution_util.move_dimension(log_volatility, 0, -1)
+        return distribution_util.move_dimension(log_volatility, 0, -1)
 
       def prior_fn():
         """Model definition."""

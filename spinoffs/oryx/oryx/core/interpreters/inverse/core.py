@@ -92,9 +92,7 @@ class InverseAndILDJ(Cell):
     return all(any(s1 < s2 for s2 in other.slices) for s1 in self.slices)
 
   def __eq__(self, other: 'InverseAndILDJ') -> bool:
-    if self.aval != other.aval:
-      return False
-    return self.slices == other.slices
+    return False if self.aval != other.aval else self.slices == other.slices
 
   def join(self, other: 'InverseAndILDJ') -> 'InverseAndILDJ':
     if other.top():

@@ -103,8 +103,9 @@ class VectorModel(model_lib.Model):
         event_shape=_get_vector_event_shape(self._model),
         dtype=_get_unique_dtype(
             self._model.dtype,
-            'Model must have only one Tensor dtype, saw: {}'.format),
-        name='vector_' + self._model.name,
+            'Model must have only one Tensor dtype, saw: {}'.format,
+        ),
+        name=f'vector_{self._model.name}',
         pretty_name=str(self._model),
         sample_transformations=_make_vector_sample_transformations(
             self._model, flatten_sample_transformations),

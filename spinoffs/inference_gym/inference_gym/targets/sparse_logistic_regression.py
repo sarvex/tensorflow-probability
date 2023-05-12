@@ -96,11 +96,11 @@ class SparseLogisticRegression(bayesian_model.BayesianModel):
           ))
 
       def log_likelihood_fn(unscaled_weights,
-                            local_scales,
-                            global_scale,
-                            features,
-                            labels,
-                            reduce_sum=True):
+                                local_scales,
+                                global_scale,
+                                features,
+                                labels,
+                                reduce_sum=True):
         """The log_likelihood function."""
         features = tf.convert_to_tensor(features, tf.float32)
         features = _add_bias(features)
@@ -111,10 +111,7 @@ class SparseLogisticRegression(bayesian_model.BayesianModel):
 
         logits = tf.einsum('nd,...d->...n', features, weights)
         log_likelihood = tfd.Bernoulli(logits=logits).log_prob(labels)
-        if reduce_sum:
-          return tf.reduce_sum(log_likelihood, [-1])
-        else:
-          return log_likelihood
+        return tf.reduce_sum(log_likelihood, [-1]) if reduce_sum else log_likelihood
 
       self._train_log_likelihood_fn = functools.partial(
           log_likelihood_fn, features=train_features, labels=train_labels)

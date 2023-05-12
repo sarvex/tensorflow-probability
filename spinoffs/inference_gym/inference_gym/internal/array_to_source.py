@@ -35,11 +35,11 @@ def array_to_source(name, array):
   Returns:
     array_str: The encoded array.
   """
-  ret = '{} = np.array([\n'.format(name)
+  ret = f'{name} = np.array([\n'
   array = np.asarray(array)
   array_flat = array.reshape([-1])
   for e in array_flat:
     e_str = np.array2string(e, floatmode='unique')
-    ret += '    {},\n'.format(e_str)
-  ret += ']).reshape({})\n'.format(array.shape)
+    ret += f'    {e_str},\n'
+  ret += f']).reshape({array.shape})\n'
   return ret

@@ -98,11 +98,10 @@ def _get_global_variable_names(name, tuple_path):
     path_suffix = ''
 
   upper_name = name.upper()
-  mean_name = '{}{}_MEAN'.format(upper_name, path_suffix)
-  sem_name = '{}{}_MEAN_STANDARD_ERROR'.format(upper_name, path_suffix)
-  std_name = '{}{}_STANDARD_DEVIATION'.format(upper_name, path_suffix)
-  sestd_name = '{}{}_STANDARD_DEVIATION_STANDARD_ERROR'.format(
-      upper_name, path_suffix)
+  mean_name = f'{upper_name}{path_suffix}_MEAN'
+  sem_name = f'{upper_name}{path_suffix}_MEAN_STANDARD_ERROR'
+  std_name = f'{upper_name}{path_suffix}_STANDARD_DEVIATION'
+  sestd_name = f'{upper_name}{path_suffix}_STANDARD_DEVIATION_STANDARD_ERROR'
 
   return mean_name, sem_name, std_name, sestd_name
 
@@ -191,7 +190,7 @@ def get_ground_truth_module_source(target_name, command_str, array_strs):
   """
   array_str = '\n'.join(array_strs)
 
-  module_source = r'''# Lint as: python3
+  return r'''# Lint as: python3
 # Copyright 2020 The TensorFlow Probability Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -217,7 +216,6 @@ Automatically generated using the command:
 
 import numpy as np
 
-{array_str}'''.format(
-    target_name=target_name, array_str=array_str, command_str=command_str)
-
-  return module_source
+{array_str}'''.format(target_name=target_name,
+                          array_str=array_str,
+                          command_str=command_str)

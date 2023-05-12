@@ -387,7 +387,7 @@ def download(directory, filename):
   if not tf.io.gfile.exists(directory):
     tf.io.gfile.makedirs(directory)
   url = os.path.join(ROOT_PATH, filename)
-  print("Downloading %s to %s" % (url, filepath))
+  print(f"Downloading {url} to {filepath}")
   urllib.request.urlretrieve(url, filepath)
   return filepath
 
@@ -536,7 +536,7 @@ def main(argv):
         for s in value:
           print(s)
       else:
-        print(str(value))
+        print(value)
       print("")
     print("")
 

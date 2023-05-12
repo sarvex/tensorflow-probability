@@ -126,7 +126,7 @@ def download_sprites():
   if not tf.io.gfile.exists(filepath):
     if not tf.io.gfile.exists(FLAGS.data_dir):
       tf.io.gfile.makedirs(FLAGS.data_dir)
-    zip_name = "{}.zip".format(filepath)
+    zip_name = f"{filepath}.zip"
     urllib.request.urlretrieve(DATA_SPRITES_URL, zip_name)
     with zipfile.ZipFile(zip_name, "r") as zip_file:
       zip_file.extractall(FLAGS.data_dir)
@@ -170,7 +170,7 @@ def create_seq(character, action_metadata, direction, length=8, start=0):
   # Extract 64x64 patches that are side-by-side in the sprite, and limit
   # to the actual number of frames for the given action.
   frames = tf.stack(tf.split(sprite_line, 13, axis=1))  # 13 is a hack
-  frames = frames[0:action_metadata[1]]
+  frames = frames[:action_metadata[1]]
 
   # Extract a slice of the desired length.
   # NOTE: Length could be longer than the number of frames, so tile as needed.
@@ -344,16 +344,13 @@ class SpritesDataset(object):
     num_train_test_overlap = len(set(train_chars) & set(test_chars))
     if num_train_actual != num_train:
       raise ValueError(
-          "Unexpected number of training examples: {}.".format(
-              num_train_actual))
+          f"Unexpected number of training examples: {num_train_actual}.")
     if num_test_actual != num_test:
+      raise ValueError(f"Unexpected number of testing examples: {num_test_actual}.")
+    if num_train_test_overlap > 0:# pylint: disable=g-explicit-length-test
       raise ValueError(
-          "Unexpected number of testing examples: {}.".format(
-              num_test_actual))
-    if num_train_test_overlap > 0:  # pylint: disable=g-explicit-length-test
-      raise ValueError(
-          "Overlap between train and test datasets detected: {}.".format(
-              num_train_test_overlap))
+          f"Overlap between train and test datasets detected: {num_train_test_overlap}."
+      )
 
     self.train = create_sprites_dataset(
         train_chars, ACTIONS, DIRECTIONS, self.channels, self.length,

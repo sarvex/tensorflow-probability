@@ -86,11 +86,7 @@ class BatchNorm(base.Layer):
   def _call(self, x, training=True):
     if len(x.shape) != len(self.info.shape):
       raise ValueError('Need to `jax.vmap` in order to batch')
-    if training:
-      # BatchNorm on a single example while training=True is a no-op
-      # The tracer will pass through this and hand off to _call_batched
-      return x
-    return self._call_batched(x[np.newaxis], training=False)[0]
+    return x if training else self._call_batched(x[np.newaxis], training=False)[0]
 
   def _call_batched(self, x, training=True):
     params, info, state = self.params, self.info, self.state
@@ -109,14 +105,13 @@ class BatchNorm(base.Layer):
       mean, var = state.moving_mean, state.moving_var
     z = (x - mean) / np.sqrt(var + epsilon)
     if center and scale:
-      output = gamma * z + beta
+      return gamma * z + beta
     elif center:
-      output = z + beta
+      return z + beta
     elif scale:
-      output = gamma * z
+      return gamma * z
     else:
-      output = z
-    return output
+      return z
 
   def _update(self, x):
     return self._update_axis(x, self.info.axis)

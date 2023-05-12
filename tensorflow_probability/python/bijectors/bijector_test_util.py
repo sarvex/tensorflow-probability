@@ -30,7 +30,7 @@ from tensorflow_probability.python.math.gradient import batch_jacobian
 
 def assert_finite(array):
   if not np.isfinite(array).all():
-    raise AssertionError('array was not all finite. %s' % array[:15])
+    raise AssertionError(f'array was not all finite. {array[:15]}')
 
 
 def assert_strictly_increasing(array):

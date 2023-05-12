@@ -312,8 +312,7 @@ class HarvestTrace(jax_core.Trace):
       self, primitive: jax_core.Primitive, tracers: List['HarvestTracer'],
       params: Dict[str, Any]) -> Union['HarvestTracer', List['HarvestTracer']]:
     context = trace_util.get_dynamic_context(self)
-    custom_rule = context.get_custom_rule(primitive)
-    if custom_rule:
+    if custom_rule := context.get_custom_rule(primitive):
       return custom_rule(self, *tracers, **params)
     return self.default_process_primitive(primitive, tracers, params)
 
@@ -329,9 +328,7 @@ class HarvestTrace(jax_core.Trace):
     if not primitive.multiple_results:
       outvals = [outvals]
     out_tracers = jax_util.safe_map(self.pure, outvals)
-    if primitive.multiple_results:
-      return out_tracers
-    return out_tracers[0]
+    return out_tracers if primitive.multiple_results else out_tracers[0]
 
   def process_call(self, call_primitive: jax_core.Primitive, f: Any,
                    tracers: List['HarvestTracer'], params: Dict[str, Any]):
@@ -528,11 +525,10 @@ def reap_function(main: jax_core.MainTrace, settings: HarvestSettings,
     del main
   out_values, reap_values = tree_util.tree_map(lambda x: x.val,
                                                (out_tracers, reap_tracers))
-  if return_metadata:
-    out = (out_values, reap_values, reap_metadata)
-  else:
-    out = (out_values, reap_values)
-  yield out
+  yield (out_values, reap_values, reap_metadata) if return_metadata else (
+      out_values,
+      reap_values,
+  )
 
 
 def reap_eval(
@@ -921,8 +917,7 @@ def plant_eval(f: lu.WrappedFun, trace: HarvestTrace, settings: HarvestSettings,
 
 @lu.transformation
 def plant_wrapper(*args):
-  out = yield (args,), {}
-  yield out
+  yield (yield (args,), {})
 
 
 def plant(f,

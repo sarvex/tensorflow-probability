@@ -438,9 +438,8 @@ def default_trajectory_length_sample(
   mean_trajectory_length = tf.exp(
       fun_mc.clip_grads(trajectory_length_params.log_mean_trajectory_length,
                         1.))
-  trajectory_length = 2 * _halton(tf.cast(
-      step, mean_trajectory_length.dtype)) * mean_trajectory_length
-  return trajectory_length
+  return (2 * _halton(tf.cast(step, mean_trajectory_length.dtype)) *
+          mean_trajectory_length)
 
 
 @util.named_call

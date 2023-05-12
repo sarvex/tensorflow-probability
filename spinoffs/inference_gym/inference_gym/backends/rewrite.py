@@ -152,20 +152,16 @@ class Loader(importlib.abc.SourceLoader):
       print('root_name ', root_name)
 
     data = re.sub(
-        'import {}'.format(root_name),
-        'import {}.dynamic.{}'.format(root_name, self._backend_name),
+        f'import {root_name}',
+        f'import {root_name}.dynamic.{self._backend_name}',
         data,
     )
     data = re.sub(
-        'from {}'.format(root_name),
-        'from {}.dynamic.{}'.format(root_name, self._backend_name),
+        f'from {root_name}',
+        f'from {root_name}.dynamic.{self._backend_name}',
         data,
     )
-    data = re.sub(
-        'BACKEND = None',
-        'BACKEND = \'{}\''.format(self._backend_name),
-        data,
-    )
+    data = re.sub('BACKEND = None', f"BACKEND = \'{self._backend_name}\'", data)
     data = _external_rewrites(self._backend_name, data)
 
     if DEBUG:
@@ -187,7 +183,7 @@ class Finder(importlib.abc.MetaPathFinder):
     """See base class."""
     del target  # We don't use this hint.
     root_name_comps = _root_name_comps()
-    root_name = _root_name() + '.dynamic'
+    root_name = f'{_root_name()}.dynamic'
 
     if DEBUG:
       print('candidate: ', fullname, path)
@@ -223,14 +219,13 @@ class Finder(importlib.abc.MetaPathFinder):
     # backends.util.silence_nonrewritten_import_errors utility.
     orig_spec = importlib.util.find_spec(orig_module_name)
     if orig_spec is None:
-      raise ImportError('Cannot import ' + orig_module_name)
+      raise ImportError(f'Cannot import {orig_module_name}')
     is_package = bool(orig_spec.submodule_search_locations)
     orig_loader = orig_spec.loader
     # We use duck-typing here because we don't necesarily need this to be a
     # SourceFileLoader, just that it has this method.
     if not hasattr(orig_loader, 'get_data'):
-      raise TypeError('{} has an unsupported loader: {}'.format(
-          orig_module_name, orig_loader))
+      raise TypeError(f'{orig_module_name} has an unsupported loader: {orig_loader}')
 
     spec = importlib.machinery.ModuleSpec(
         fullname,

@@ -79,8 +79,8 @@ def get_columns(dataframe, name_regex):
   col_selector = dataframe.columns.map(
       lambda s: bool(re.fullmatch(name_regex, s)))
   if not np.any(col_selector):
-    raise ValueError('Regex "{}" selected no params from {}'.format(
-        name_regex, dataframe.columns))
+    raise ValueError(
+        f'Regex "{name_regex}" selected no params from {dataframe.columns}')
   return np.array(dataframe.loc[:, col_selector])
 
 

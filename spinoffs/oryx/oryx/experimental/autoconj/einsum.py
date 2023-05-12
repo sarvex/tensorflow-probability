@@ -221,12 +221,11 @@ def compose_einsums(parent_formula: str, left_args: Tuple[Any, ...],
   ]
   out_formula = ''.join(subs_map[idx] for idx in parent_out_formula)
   # Maps child output indices with corresponding parent indices
-  subs_map.update((pidx + '_child', subs_map[idx])
+  subs_map.update((f'{pidx}_child', subs_map[idx])
                   for pidx, idx in zip(child_out_formula, old_in_formula))
   # Updates the child input formulas to use parent mappings
   child_in_formulas = [
-      ''.join(subs_map[idx + '_child']
-              for idx in subs)
+      ''.join(subs_map[f'{idx}_child'] for idx in subs)
       for subs in child_in_formulas
   ]
   # Concatenates the formulas and arguments

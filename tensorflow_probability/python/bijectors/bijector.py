@@ -65,25 +65,24 @@ class _BijectorMeta(abc.ABCMeta):
                     in bij.parameters.items() if param_name in param_names}
       metadata = {param_name: value for param_name, value
                   in bij.parameters.items() if param_name not in param_names}
-      if components:
-        keys, values = zip(*sorted(components.items()))
-      else:
-        keys, values = (), ()
+      keys, values = zip(*sorted(components.items())) if components else ((), ())
       # Mimics the logic in `tfp.experimental.composite_tensor` where we
       # aggressively try to convert arguments into Tensors.
       def _maybe_convert_to_tensor(value, name):
-        try:
+        with contextlib.suppress(ValueError, TypeError, AssertionError):
           value = tf.convert_to_tensor(value, name=name)
-        except (ValueError, TypeError, AssertionError):
-          pass
         return value
-      values = tuple([_maybe_convert_to_tensor(value, name) for value, name,
-                      in zip(values, keys)])
+
+      values = tuple(
+          _maybe_convert_to_tensor(value, name)
+          for value, name, in zip(values, keys))
       return values, (keys, metadata)
+
     def unflatten(info, xs):
       keys, metadata = info
       parameters = dict(list(zip(keys, xs)), **metadata)
       return cls(**parameters)
+
     from jax import tree_util  # pylint: disable=g-import-not-at-top
     tree_util.register_pytree_node(cls, flatten, unflatten)
 
@@ -866,12 +865,7 @@ class Bijector(tf.Module, metaclass=_BijectorMeta):
     return True
 
   def _get_parameterization(self):
-    if self.parameters is None:
-      # If a user-written bijector doesn't specify `parameters`, we must assume
-      # that all instances are unique.
-      # TODO(b/176242804): this can be removed if we always infer `parameters`.
-      return id(self)
-    return self.parameters
+    return id(self) if self.parameters is None else self.parameters
 
   def __call__(self, value, name=None, **kwargs):
     """Applies or composes the `Bijector`, depending on input type.
@@ -1132,10 +1126,9 @@ class Bijector(tf.Module, metaclass=_BijectorMeta):
     except ValueError as e:
       if (tf.nest.is_nested(self.forward_min_event_ndims)
           and not self._parts_interact):
-        raise ValueError('Batch slicing failed for the multi-part bijector '
-                         '"{}", likely because its `forward_min_event_ndims` '
-                         '({}) does not imply a consistent batch shape.'.format(
-                             self.name, self.forward_min_event_ndims)) from e
+        raise ValueError(
+            f'Batch slicing failed for the multi-part bijector "{self.name}", likely because its `forward_min_event_ndims` ({self.forward_min_event_ndims}) does not imply a consistent batch shape.'
+        ) from e
       raise e
 
   def _broadcast_parameters_with_batch_shape(self, batch_shape, x_event_ndims):
@@ -1294,7 +1287,7 @@ class Bijector(tf.Module, metaclass=_BijectorMeta):
   @classmethod
   def _parameter_properties(cls, dtype):
     raise NotImplementedError(
-        '_parameter_properties` is not implemented: {}'.format(cls.__name__))
+        f'_parameter_properties` is not implemented: {cls.__name__}')
 
   @classmethod
   def parameter_properties(cls, dtype=tf.float32):
@@ -1725,7 +1718,7 @@ class Bijector(tf.Module, metaclass=_BijectorMeta):
 
   def forward_dtype(self, dtype=UNSPECIFIED, name='forward_dtype', **kwargs):
     """Returns the dtype returned by `forward` for the provided input."""
-    with tf.name_scope('{}/{}'.format(self.name, name)):
+    with tf.name_scope(f'{self.name}/{name}'):
       if dtype is UNSPECIFIED:
         # We pass the broadcasted input structure through `_forward_dtype`
         # rather than directly returning the output structure, allowing
@@ -1754,7 +1747,7 @@ class Bijector(tf.Module, metaclass=_BijectorMeta):
 
   def inverse_dtype(self, dtype=UNSPECIFIED, name='inverse_dtype', **kwargs):
     """Returns the dtype returned by `inverse` for the provided input."""
-    with tf.name_scope('{}/{}'.format(self.name, name)):
+    with tf.name_scope(f'{self.name}/{name}'):
       if dtype is UNSPECIFIED:
         # We pass the broadcasted output structure through `_inverse_dtype`
         # rather than directly returning the input structure, allowing
@@ -1938,19 +1931,16 @@ class Bijector(tf.Module, metaclass=_BijectorMeta):
       # may not have a coherent batch shape at their min_event_ndims.
       batch_shape_str = '?'
     # Drop batch shape if it's not statically defined or otherwise unavailable.
-    maybe_batch_shape = ('' if batch_shape_str == '?'
-                         else ', batch_shape={}'.format(batch_shape_str))
+    maybe_batch_shape = ('' if batch_shape_str == '?' else
+                         f', batch_shape={batch_shape_str}')
     if self.dtype is not None:
       maybe_dtype = ', dtype=' + _str_dtype(self.dtype).replace('\'', '')
     else:
       maybe_dtype = ''
     if self.forward_min_event_ndims == self.inverse_min_event_ndims:
-      maybe_min_ndims = ', min_event_ndims={}'.format(
-          self.forward_min_event_ndims)
+      maybe_min_ndims = f', min_event_ndims={self.forward_min_event_ndims}'
     else:
-      maybe_min_ndims = (
-          ', forward_min_event_ndims={}, inverse_min_event_ndims={}'.format(
-              self.forward_min_event_ndims, self.inverse_min_event_ndims))
+      maybe_min_ndims = f', forward_min_event_ndims={self.forward_min_event_ndims}, inverse_min_event_ndims={self.inverse_min_event_ndims}'
     maybe_min_ndims = maybe_min_ndims.replace('\'', '')
     return ('tfp.bijectors.{type_name}('
             '"{self_name}"'
@@ -2043,7 +2033,7 @@ def check_valid_ndims(ndims, validate=True):
   shape = ps.shape(ndims)
   if not tf.is_tensor(shape):
     if shape.tolist():
-      raise ValueError('Expected scalar, saw shape {}.'.format(shape))
+      raise ValueError(f'Expected scalar, saw shape {shape}.')
   elif validate:
     assertions.append(assert_util.assert_rank_at_most(
         x=ndims, rank=0, message='Expected scalar'))
@@ -2051,14 +2041,14 @@ def check_valid_ndims(ndims, validate=True):
   # Dtype is *always* known statically.
   if hasattr(ndims, 'dtype'):
     if not dtype_util.is_integer(ndims.dtype):
-      raise ValueError('Expected integer, got dtype {}.'.format(ndims.dtype))
+      raise ValueError(f'Expected integer, got dtype {ndims.dtype}.')
   elif not isinstance(ndims, int):
-    raise ValueError('Expected integer, got dtype {}.'.format(type(ndims)))
+    raise ValueError(f'Expected integer, got dtype {type(ndims)}.')
 
   ndims_ = tf.get_static_value(ndims)
   if ndims_ is not None:
     if not np.all(ndims_ >= 0):
-      raise ValueError('`ndims` must be non-negative, saw {}.'.format(ndims_))
+      raise ValueError(f'`ndims` must be non-negative, saw {ndims_}.')
   elif validate:
     with tf.control_dependencies(assertions):
       assertions.append(assert_util.assert_non_negative(
@@ -2119,23 +2109,21 @@ def ldj_reduction_ndims(event_ndims,
         flat_differences.append(difference)
         differences_all_static = False
 
-    # Make sure the differences are unique.
-    if len(flat_differences) > 1:
-      if differences_all_static:
-        if len(set(flat_differences)) > 1:
-          raise ValueError(
-              ('Differences between `event_ndims` and `min_event_ndims must be '
-               'equal for all elements of the structured input. Saw '
-               'event_ndims={}, min_event_ndims={}.'
-               ).format(event_ndims, min_event_ndims))
-      elif validate_args:
+    if differences_all_static:
+      if len(flat_differences) > 1 and len(set(flat_differences)) > 1:
+        raise ValueError(
+            f'Differences between `event_ndims` and `min_event_ndims must be equal for all elements of the structured input. Saw event_ndims={event_ndims}, min_event_ndims={min_event_ndims}.'
+        )
+    elif validate_args:
+      if len(flat_differences) > 1:
         with tf.control_dependencies(assertions):
-          assertions.append(assert_util.assert_equal(
-              flat_differences[0], flat_differences[1:],
-              message=('Differences between `event_ndims` and `min_event_ndims`'
-                       ' must be equal for all elements of the structured '
-                       'input. Saw event_ndims={}, min_event_ndims={}.'
-                       ).format(event_ndims, min_event_ndims)))
+          assertions.append(
+              assert_util.assert_equal(
+                  flat_differences[0],
+                  flat_differences[1:],
+                  message=
+                  f'Differences between `event_ndims` and `min_event_ndims` must be equal for all elements of the structured input. Saw event_ndims={event_ndims}, min_event_ndims={min_event_ndims}.',
+              ))
 
     # Now the we know they're all the same, just choose the first.
     result = flat_differences[0]
@@ -2256,15 +2244,17 @@ def ldj_reduction_shape(shape_structure,
     reduce_ndims_ = tf.get_static_value(reduce_ndims)
     if reduce_ndims_ is not None:
       if reduce_ndims_ < 0:
-        raise ValueError('`event_ndims must be at least {}. Saw: {}.'
-                         .format(min_event_ndims, event_ndims))
+        raise ValueError(
+            f'`event_ndims must be at least {min_event_ndims}. Saw: {event_ndims}.'
+        )
     elif validate_args:
       with tf.control_dependencies(assertions):
         assertions.append(
             assert_util.assert_non_negative(
                 reduce_ndims,
-                message='`event_ndims` must be at least {}. Saw: {}'.format(
-                    min_event_ndims, event_ndims)))
+                message=
+                f'`event_ndims` must be at least {min_event_ndims}. Saw: {event_ndims}',
+            ))
 
     # Make sure inputs have rank greater than event_ndims.
     rank_structure = nest.map_structure_up_to(
@@ -2275,15 +2265,15 @@ def ldj_reduction_shape(shape_structure,
       ndims_ = tf.get_static_value(ndims)
       if rank_ is not None and ndims_ is not None:
         if rank_ < ndims_:
-          raise ValueError('Input must have rank at least {}. Saw: {}'.format(
-              ndims_, rank_))
+          raise ValueError(f'Input must have rank at least {ndims_}. Saw: {rank_}')
       elif validate_args:
         with tf.control_dependencies(assertions):
           assertions.append(
               assert_util.assert_greater_equal(
-                  rank, tf.cast(ndims, dtype_util.convert_to_dtype(rank)),
-                  message=('Input must have rank at least {}.'
-                           'Saw: {}'.format(ndims, rank))))
+                  rank,
+                  tf.cast(ndims, dtype_util.convert_to_dtype(rank)),
+                  message=f'Input must have rank at least {ndims}.Saw: {rank}',
+              ))
 
     # Get the non-minimal portion of the event shape over which to reduce LDJ.
     ldj_reduce_shapes = nest.flatten(
@@ -2298,12 +2288,11 @@ def ldj_reduction_shape(shape_structure,
     if len(ldj_reduce_shapes) > 1 and not allow_event_shape_broadcasting:
       # Try to check shapes statically.
       ldj_reduce_shapes_ = [tf.get_static_value(s) for s in ldj_reduce_shapes]
-      if not any(s is None for s in ldj_reduce_shapes_):
+      if all(s is not None for s in ldj_reduce_shapes_):
         if len(set(map(tuple, ldj_reduce_shapes_))) > 1:
           raise ValueError(
-              '`event_shape` components to the left of `min_event_ndims` must '
-              ' be equal. Saw: {}.'.format(
-                  nest.pack_sequence_as(shape_structure, ldj_reduce_shapes_)))
+              f'`event_shape` components to the left of `min_event_ndims` must  be equal. Saw: {nest.pack_sequence_as(shape_structure, ldj_reduce_shapes_)}.'
+          )
 
       elif validate_args:
         with tf.control_dependencies(assertions):
@@ -2318,7 +2307,6 @@ def ldj_reduction_shape(shape_structure,
       for s in ldj_reduce_shapes[1:]:
         ldj_reduce_shape = ps.broadcast_shape(ldj_reduce_shape, s)
 
-    # Check that the bijector's batch shape does not expand `ldj_reduce_shape`.
     elif parameter_batch_shape is not None:
       parameter_batch_shape_ = tf.get_static_value(parameter_batch_shape)
       ldj_reduce_shape_ = tf.get_static_value(ldj_reduce_shape)
@@ -2334,9 +2322,9 @@ def ldj_reduction_shape(shape_structure,
             tf.TensorShape(parameter_batch_in_ldj_shape_),
             tf.TensorShape(ldj_reduce_shape_))
         if not np.array_equal(ldj_reduce_shape_, broadcasted_shape_):
-          raise ValueError('Broadcasting with bijector parameters changes the '
-                           'LDJ reduction shape from {} to {}.'.format(
-                               ldj_reduce_shape_, broadcasted_shape_))
+          raise ValueError(
+              f'Broadcasting with bijector parameters changes the LDJ reduction shape from {ldj_reduce_shape_} to {broadcasted_shape_}.'
+          )
       elif validate_args:
         parameter_batch_rank = ps.size(parameter_batch_shape)
         parameter_batch_in_ldj_shape = ps.slice(
@@ -2372,8 +2360,8 @@ def _autodiff_log_det_jacobian(fn, x):
   # the gradients will be (incorrectly) summed.
   _, grads = gradient.value_and_gradient(fn, x)
   if grads is None:
-    raise ValueError('Cannot compute log det jacobian; function {} has `None` '
-                     'gradient.'.format(fn))
+    raise ValueError(
+        f'Cannot compute log det jacobian; function {fn} has `None` gradient.')
   return tf.math.log(tf.abs(grads))
 
 
@@ -2392,9 +2380,7 @@ class _PrettyDtype(object):
     self.dtype = dtype
 
   def __repr__(self):
-    if self.dtype is None:
-      return '?'
-    return dtype_util.name(self.dtype)
+    return '?' if self.dtype is None else dtype_util.name(self.dtype)
 
 
 def _str_dtype(x):

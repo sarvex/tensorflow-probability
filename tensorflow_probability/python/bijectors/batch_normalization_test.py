@@ -121,7 +121,6 @@ class BatchNormTest(test_util.TestCase,
       # ildj is computed with minibatch statistics.
       expected_ildj = np.sum(np.log(1.) - .5 * np.log(
           expected_batch_var + batch_norm.batchnorm.epsilon))
-      self.assertAllClose(expected_ildj, np.squeeze(ildj_))
     else:
       # When training=False, moving_mean, moving_var remain at their
       # initialized values (0., 1.), resulting in no scale/shift (a small
@@ -131,7 +130,8 @@ class BatchNormTest(test_util.TestCase,
       # ildj is computed with saved statistics.
       expected_ildj = np.sum(
           np.log(1.) - .5 * np.log(1. + batch_norm.batchnorm.epsilon))
-      self.assertAllClose(expected_ildj, np.squeeze(ildj_))
+
+    self.assertAllClose(expected_ildj, np.squeeze(ildj_))
 
   @parameterized.named_parameters(
       ("2d_event_ndims_v1",

@@ -131,14 +131,8 @@ class NDSlice(pytree.Pytree):
     """
     if self.ndim != other.ndim:
       return False
-    for i, (s1, s2) in enumerate(zip(self.slices, other.slices)):
-      if i == dim:
-        if s1.stop != s2.start:
-          return False
-      else:
-        if s1 != s2:
-          return False
-    return True
+    return not any(i == dim and s1.stop != s2.start or i != dim and s1 != s2
+                   for i, (s1, s2) in enumerate(zip(self.slices, other.slices)))
 
   def concatenate(self, other: 'NDSlice', dim: int) -> 'NDSlice':
     """Concatenates an `NDSlice` along a dimension.

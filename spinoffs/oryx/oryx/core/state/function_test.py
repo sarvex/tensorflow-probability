@@ -40,9 +40,7 @@ def _training_abstract_eval(a, **_):
 
 
 def _training_add_kwargs_rule(a, *, kwargs):
-  if kwargs.get('training', True):
-    return a + 1.
-  return a
+  return a + 1. if kwargs.get('training', True) else a
 
 
 training_add_p.def_impl(_training_add_impl)

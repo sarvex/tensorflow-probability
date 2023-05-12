@@ -52,9 +52,9 @@ def conv_info(in_shape, out_chan, filter_shape,
   kernel_init = kernel_init or stax.glorot(
       rhs_spec.index('O'), rhs_spec.index('I'))
   filter_shape_iter = iter(filter_shape)
-  kernel_shape = tuple([out_chan if c == 'O' else
-                        in_shape[lhs_spec.index('C')] if c == 'I' else
-                        next(filter_shape_iter) for c in rhs_spec])
+  kernel_shape = tuple(
+      out_chan if c == 'O' else in_shape[lhs_spec.index('C')] if c ==
+      'I' else next(filter_shape_iter) for c in rhs_spec)
   if transpose:
     out_shape = lax.conv_transpose_shape_tuple(
         in_shape, kernel_shape, strides, padding, DIMENSION_NUMBERS)
@@ -126,8 +126,7 @@ class Conv(base.Layer):
   def _call(self, x):
     """Applies 2D convolution of the params with the input x."""
     if len(x.shape) != 3:
-      raise ValueError('Need to `jax.vmap` in order to batch: {}'.format(
-          x.shape))
+      raise ValueError(f'Need to `jax.vmap` in order to batch: {x.shape}')
     result = self._call_batched(x[np.newaxis])
     return result[0]
 

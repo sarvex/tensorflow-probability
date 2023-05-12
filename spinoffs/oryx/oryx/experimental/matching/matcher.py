@@ -387,9 +387,7 @@ class Var(Pattern):
       yield from succeed(bindings)
 
   def __str__(self):
-    if self.name is None:
-      return '?'
-    return f'?{self.name}'
+    return '?' if self.name is None else f'?{self.name}'
 
 
 Dot = Var(None)
@@ -407,8 +405,7 @@ class Choice(Pattern):
     if self.name is not None:
       bindings = dict(bindings, **{self.name: expr})
     for pattern in self.patterns:
-      matches = tuple(matcher(pattern)(expr, bindings, succeed))
-      if matches:
+      if matches := tuple(matcher(pattern)(expr, bindings, succeed)):
         yield from matches
         return
 
@@ -416,9 +413,7 @@ class Choice(Pattern):
     return hash(self.patterns)
 
   def __eq__(self, other):
-    if not isinstance(other, Choice):
-      return False
-    return self.patterns == other.patterns
+    return self.patterns == other.patterns if isinstance(other, Choice) else False
 
   def __str__(self):
     return f'(choice {" ".join(map(str, self.patterns))})'
@@ -450,9 +445,7 @@ class Star(Pattern):
   plus: bool = False
 
   def bind(self, bindings: Bindings, value: Any) -> Bindings:
-    if self.name is not None:
-      return dict(bindings, **{self.name: value})
-    return bindings
+    return bindings if self.name is None else dict(bindings, **{self.name: value})
 
   def accumulate_value(self, bindings: Bindings, name: str,
                        value: Any) -> Bindings:
@@ -539,12 +532,8 @@ class Star(Pattern):
 
   def __str__(self):
     if self.pattern != Dot:
-      if self.name:
-        return f'*[?{self.name}]{self.pattern}'
-      return f'*{self.pattern}'
-    if self.name:
-      return f'*?{self.name}'
-    return '*'
+      return f'*[?{self.name}]{self.pattern}' if self.name else f'*{self.pattern}'
+    return f'*?{self.name}' if self.name else '*'
 
   __repr__ = __str__
 

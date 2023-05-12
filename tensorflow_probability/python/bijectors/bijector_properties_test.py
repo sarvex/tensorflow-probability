@@ -14,6 +14,7 @@
 # ============================================================================
 """Property-based tests for TFP bijectors."""
 
+
 import collections
 import functools
 from absl.testing import parameterized
@@ -37,9 +38,7 @@ from tensorflow_probability.python.util.deferred_tensor import DeferredTensor
 from tensorflow.python.util import nest  # pylint: disable=g-direct-tensorflow-import
 
 
-MUTEX_PARAMS = (
-    set(['scale', 'log_scale']),
-)
+MUTEX_PARAMS = ({'scale', 'log_scale'}, )
 
 FLDJ = 'forward_log_det_jacobian'
 ILDJ = 'inverse_log_det_jacobian'
@@ -256,8 +255,7 @@ def bijectors(draw, bijector_name=None, batch_shape=None, event_dim=None,
     bijector_params = constrain_params(bijector_params, bijector_name)
 
   ctor = getattr(tfb, bijector_name)
-  hp.note('Forming {} bijector with params {}.'.format(
-      bijector_name, bijector_params))
+  hp.note(f'Forming {bijector_name} bijector with params {bijector_params}.')
   bijector = ctor(validate_args=validate_args, **bijector_params)
   if not return_duplicate:
     return bijector
@@ -407,8 +405,9 @@ def assert_no_none_grad(bijector, method, wrt_vars, grads):
         expect_grad = False
 
     if expect_grad != (grad is not None):
-      raise AssertionError('{} `{}` -> {} grad for bijector {}'.format(
-          'Missing' if expect_grad else 'Unexpected', method, var, bijector))
+      raise AssertionError(
+          f"{'Missing' if expect_grad else 'Unexpected'} `{method}` -> {var} grad for bijector {bijector}"
+      )
 
 
 def _ldj_tensor_conversions_allowed(bijector, is_forward):
@@ -459,9 +458,7 @@ class BijectorPropertiesTest(test_util.TestCase):
             tfp_hps.broadcast_compatible_shape(
                 shp[:shp.ndims - bijector.forward_min_event_ndims])),
         shp[shp.ndims - bijector.forward_min_event_ndims:]])
-    xs = tf.identity(data.draw(domain_tensors(bijector, shape=shp)), name='xs')
-
-    return xs
+    return tf.identity(data.draw(domain_tensors(bijector, shape=shp)), name='xs')
 
   def _draw_codomain_tensor(self, bijector, data, event_dim, sample_shape=()):
     return self._draw_domain_tensor(tfb.Invert(bijector),
@@ -502,9 +499,8 @@ class BijectorPropertiesTest(test_util.TestCase):
         return False
       if isinstance(bijector, tfb.Softfloor):
         return True
-      if is_invert(bijector):
-        return exception(bijector.bijector)
-      return False
+      return exception(bijector.bijector) if is_invert(bijector) else False
+
     if (bijector.forward_min_event_ndims == 0 and
         bijector.inverse_min_event_ndims == 0 and
         not exception(bijector)):
@@ -644,8 +640,9 @@ class BijectorPropertiesTest(test_util.TestCase):
       try:
         param_shape = param.shape_fn(sample_shape=output_shape)
       except NotImplementedError:
-        self.skipTest('No shape function implemented for bijector {} '
-                      'parameter {}.'.format(bijector_name, param_name))
+        self.skipTest(
+            f'No shape function implemented for bijector {bijector_name} parameter {param_name}.'
+        )
       self.assertGreaterEqual(
           param.event_ndims,
           ps.rank_from_shape(param_shape) - sample_and_batch_ndims)
@@ -654,8 +651,9 @@ class BijectorPropertiesTest(test_util.TestCase):
         try:
           param_bijector = param.default_constraining_bijector_fn()
         except NotImplementedError:
-          self.skipTest('No constraining bijector implemented for {} '
-                        'parameter {}.'.format(bijector_name, param_name))
+          self.skipTest(
+              f'No constraining bijector implemented for {bijector_name} parameter {param_name}.'
+          )
         unconstrained_shape = (
             param_bijector.inverse_event_shape_tensor(param_shape))
         unconstrained_param = samplers.normal(
@@ -667,11 +665,10 @@ class BijectorPropertiesTest(test_util.TestCase):
         b_float64(tf.cast(unconstrained_param, tf.float64))
 
     # Copy over any non-trainable parameters.
-    new_parameters.update({
+    new_parameters |= {
         k: v
-        for (k, v) in bijector.parameters.items()
-        if k in non_trainable_params
-    })
+        for (k, v) in bijector.parameters.items() if k in non_trainable_params
+    }
 
     # Sanity check that we got valid parameters.
     new_parameters['validate_args'] = True
@@ -902,7 +899,7 @@ CONSTRAINTS = {
 
 def constraint_for(bijector_name=None, param=None):
   if param is not None:
-    return CONSTRAINTS.get('{}.{}'.format(bijector_name, param),
+    return CONSTRAINTS.get(f'{bijector_name}.{param}',
                            CONSTRAINTS.get(param, tfp_hps.identity_fn))
   return CONSTRAINTS.get(bijector_name, tfp_hps.identity_fn)
 

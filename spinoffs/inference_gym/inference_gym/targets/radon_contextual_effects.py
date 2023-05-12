@@ -94,9 +94,7 @@ def radon_log_likelihood_fn(
     reduce_sum=True):
   log_likelihood = make_radon_observation_dist(
       params, log_uranium, floor, county, floor_by_county).log_prob(log_radon)
-  if reduce_sum:
-    return tf.reduce_sum(log_likelihood, [-1])
-  return log_likelihood
+  return tf.reduce_sum(log_likelihood, [-1]) if reduce_sum else log_likelihood
 
 
 class RadonContextualEffects(bayesian_model.BayesianModel):
